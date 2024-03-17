@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'SF-Mono';
+    src: url('./fonts/SF-Mono-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.text {
+    font-family: 'SF-Mono';
+    font-size: 380px;
+    color: white;
+}

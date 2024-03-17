@@ -1,20 +1,84 @@
 import socketIO from 'socket.io-client';
-import { useEffect, useState } from 'react';
-
-const socket = socketIO.connect('http://192.168.1.228:4000');
+import { Fragment, useEffect, useState, useReducer } from 'react';
+import host from './constants';
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
+import Page1 from './components/Page1';
+import Page2 from './components/Page2';
+import Text from './components/Text';
+import PageWrapper from './components/PageWrapper/PageWrapper';
 
 function App() {
 
-  const [stream, setStream] = useState();
+  const [stream, setStream] = useState(0);
 
   useEffect(() => {
-    socket.on('serialdata', (data) => setStream(data.data))
-  },[socket, stream])
+
+    const env = 'test';
+
+    let url = env == 'dev' ? host.local : host.ip; 
+    const socket = socketIO.connect(`${url}:4000`);
+
+    socket.on('serialdata', (data) => setStream((data.data).split(", ")))
+
+  },[])
+
+  const SamplePage = ({children, index}) => {
+
+    const [, forceUpdate] = useReducer(x => x + 1, 0);
+
+    return (
+      <PageWrapper>
+        <div 
+          onClick={forceUpdate} 
+          className="reloader"
+        />
+        <Text stream={stream} index={index}>{children}</Text>
+      </PageWrapper>
+    )
+  } 
+
+  const router = createBrowserRouter([
+    {
+      path: "/page1",
+      element: <SamplePage index={0}>what</SamplePage>,
+    },
+    {
+      path: "/page2",
+      element: <SamplePage index={1}>is</SamplePage>,
+    },
+    {
+      path: "/page3",
+      element: <SamplePage index={2}>the</SamplePage>,
+    },
+    {
+      path: "/page4",
+      element: <SamplePage index={3}>meaning</SamplePage>,
+    },
+    {
+      path: "/page5",
+      element: <SamplePage index={4}>of</SamplePage>,
+    },
+    {
+      path: "/page6",
+      element: <SamplePage index={5}>life</SamplePage>,
+    },
+  ]);
+
+
+  // console.log(stream)
 
   return (
-    <div style={{ fontSize: '90px', textOrientation: 'upright', writingMode: 'vertical-lr'}}>
-      {stream}
-    </div>
+    <Fragment>
+      <RouterProvider router={router} /> 
+        {/* <div className="container">
+        {stream}
+        <div className="item">hello</div> 
+      </div> */}
+    </Fragment>
+    
   );
 }
 
