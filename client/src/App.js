@@ -1,5 +1,5 @@
 import socketIO from 'socket.io-client';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useState, useRef } from 'react';
 import host from './constants';
 import {
   createBrowserRouter,
@@ -11,15 +11,18 @@ import PageWrapper from './components/PageWrapper/PageWrapper';
 function App() {
 
   const [stream, setStream] = useState(0);
+  const socketRef = useRef();
 
   useEffect(() => {
 
     const env = 'test';
 
     let url = env == 'dev' ? host.local : host.ip; 
-    const socket = socketIO.connect(`${url}:4000`);
+    socketRef.current = socketIO.connect(`${url}:4000`);
 
-    socket.on('serialdata', (data) => setStream((data.data).split(", ")))
+    socketRef.current.on('serialdata', (data) => {
+      setStream((data.data).split(", "))
+    })
 
   },[])
 
@@ -39,7 +42,7 @@ function App() {
     },
     {
       path: "/page2",
-      element: <SamplePage index={1}>is</SamplePage>,
+      element: <SamplePage index={1} stream={stream} />,
     },
     {
       path: "/page3",
@@ -58,9 +61,6 @@ function App() {
       element: <SamplePage index={5}>life</SamplePage>,
     },
   ]);
-
-
-  // console.log(stream)
 
   return (
     <Fragment>
