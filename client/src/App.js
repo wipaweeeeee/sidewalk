@@ -1,12 +1,10 @@
 import socketIO from 'socket.io-client';
-import { Fragment, useEffect, useState, useReducer } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import host from './constants';
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
-import Page1 from './components/Page1';
-import Page2 from './components/Page2';
 import Text from './components/Text';
 import PageWrapper from './components/PageWrapper/PageWrapper';
 
@@ -27,14 +25,8 @@ function App() {
 
   const SamplePage = ({children, index}) => {
 
-    const [, forceUpdate] = useReducer(x => x + 1, 0);
-
     return (
       <PageWrapper>
-        <div 
-          onClick={forceUpdate} 
-          className="reloader"
-        />
         <Text stream={stream} index={index}>{children}</Text>
       </PageWrapper>
     )
