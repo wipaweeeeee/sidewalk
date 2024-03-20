@@ -11,6 +11,8 @@ const data = [
     {content: 'life'},
 ]
 
+//TODO: try r3f...now not animating right
+
 const Text = ({index, stream}) => {
 
     const [letter, setLetter] = useState("");
@@ -18,7 +20,6 @@ const Text = ({index, stream}) => {
     const handleRandomLetter = () => { 
         const alphabet = "abcdefghijklmnopqrstuvwxyz";
         const randomIndex = Math.floor(Math.random() * alphabet.length);
-        console.log(randomIndex)
         setLetter(alphabet[randomIndex]);
     }
 

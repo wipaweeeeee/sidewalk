@@ -38,7 +38,7 @@ function App() {
   const router = createBrowserRouter([
     {
       path: "/page1",
-      element: <SamplePage index={0}>what</SamplePage>,
+      element: <SamplePage index={0} stream={stream} />,
     },
     {
       path: "/page2",
@@ -46,19 +46,19 @@ function App() {
     },
     {
       path: "/page3",
-      element: <SamplePage index={2}>the</SamplePage>,
+      element: <SamplePage index={2} stream={stream} />,
     },
     {
       path: "/page4",
-      element: <SamplePage index={3}>meaning</SamplePage>,
+      element: <SamplePage index={3} stream={stream} />,
     },
     {
       path: "/page5",
-      element: <SamplePage index={4}>of</SamplePage>,
+      element: <SamplePage index={4} stream={stream} />,
     },
     {
       path: "/page6",
-      element: <SamplePage index={5}>life</SamplePage>,
+      element: <SamplePage index={5} stream={stream} />,
     },
   ]);
 
