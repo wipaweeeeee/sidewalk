@@ -11,7 +11,7 @@ app.use(cors());
 const env = 'test';
 const host = { 
     local: "http://localhost",
-    ip: "http://192.168.1.192" 
+    ip: "http://192.168.1.228"//"http://192.168.1.192" 
 }
 
 let url = env == 'dev' ? host.local : host.ip; 
@@ -45,7 +45,7 @@ const socketIO = require('socket.io')(http, {
 const { SerialPort } = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline')
 const port = new SerialPort({
-    path: '/dev/cu.usbmodem1101',
+    path: '/dev/cu.usbmodem11101',
     baudRate: 9600,
 })
 const parser = port.pipe(new ReadlineParser()); 
