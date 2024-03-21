@@ -1,5 +1,4 @@
 import styles from './styles.module.scss';
-import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 
 const data = [
@@ -48,34 +47,17 @@ const Text = ({index, stream}) => {
         
     },[stream])
 
-    const variants = {
-        normal: {
-            y: '0%',
-            transition: {
-                duration: 0.5
-            }
-        }, 
-        shuffle: {
-            y: '-100%',
-            transition: {
-                duration: 0.5
-            }
-        }
-    }
-
     // console.log(stream)
 
     let letterArray = data[index].content.split("");
     let content = [];
     for (var i = 0; i < letterArray.length; i++) {
         content.push(
-            <motion.div 
+            <div 
                 key={i}
-                initial={false}
-                variants={variants}
             >
                 {letter == null ? letterArray[i] : letter}
-            </motion.div>)
+            </div>)
     }
 
     return (
