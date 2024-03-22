@@ -7,30 +7,32 @@ import {
 } from "react-router-dom";
 import Text from './components/Text';
 import PageWrapper from './components/PageWrapper/PageWrapper';
+import Cube from './components/Cube';
 
 function App() {
 
   const [stream, setStream] = useState(0);
   const socketRef = useRef();
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    const env = 'test';
+  //   const env = 'test';
 
-    let url = env == 'dev' ? host.local : host.ip; 
-    socketRef.current = socketIO.connect(`${url}:4000`);
+  //   let url = env == 'dev' ? host.local : host.ip; 
+  //   socketRef.current = socketIO.connect(`${url}:4000`);
 
-    socketRef.current.on('serialdata', (data) => {
-      setStream((data.data).split(", "))
-    })
+  //   socketRef.current.on('serialdata', (data) => {
+  //     setStream((data.data).split(", "))
+  //   })
 
-  },[])
+  // },[])
 
   const SamplePage = ({children, index}) => {
 
     return (
       <PageWrapper>
-        <Text stream={stream} index={index}>{children}</Text>
+        {/* <Text stream={stream} index={index}>{children}</Text> */}
+        <Cube />
       </PageWrapper>
     )
   } 
@@ -38,7 +40,7 @@ function App() {
   const router = createBrowserRouter([
     {
       path: "/page1",
-      element: <SamplePage index={0} stream={stream} />,
+      element: <SamplePage index={0} />,
     },
     {
       path: "/page2",
