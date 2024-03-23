@@ -2,6 +2,9 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import socketIO from 'socket.io-client';
 import host from '../../constants';
+import ParticleText from '../ParticleText';
+import { OrbitControls } from "@react-three/drei";
+
 
 const Cube = () => {
 
@@ -12,11 +15,11 @@ const Cube = () => {
 
     useEffect(() => {
     
-        setSocketClient(socketIO.connect(`${url}:4000`));
+        // setSocketClient(socketIO.connect(`${url}:4000`));
 
-        return () => {
-            if (socketClient) socketClient.disconnect();
-        }
+        // return () => {
+        //     if (socketClient) socketClient.disconnect();
+        // }
     
     },[])
 
@@ -33,7 +36,7 @@ const Cube = () => {
                 setSpeed(sumSpeed * 0.0001);
             }
 
-            socket.on('serialdata', onSerialData);
+            // socket.on('serialdata', onSerialData);
         },[socket])
 
         console.log(speed)
@@ -53,9 +56,12 @@ const Cube = () => {
     }
 
     return (
-        <Canvas>
-            <pointLight position={[5, 5, 5]} />
-            <Mesh socket={socketClient}/>
+        <Canvas camera={{ position: [0, 0, 100], fov: 45, near: 0.1, far: 1000, aspect: window.innerWidth/window.innerHeight  }}>
+            {/* <pointLight position={[5, 5, 5]} /> */}
+            <ambientLight intensity={0.5} />
+            {/* <Mesh socket={socketClient}/> */}
+            <ParticleText />
+            <OrbitControls />
         </Canvas>
     )
 }
