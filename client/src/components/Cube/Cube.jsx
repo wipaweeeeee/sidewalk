@@ -15,11 +15,11 @@ const Cube = () => {
 
     useEffect(() => {
     
-        // setSocketClient(socketIO.connect(`${url}:4000`));
+        setSocketClient(socketIO.connect(`${url}:4000`));
 
-        // return () => {
-        //     if (socketClient) socketClient.disconnect();
-        // }
+        return () => {
+            if (socketClient) socketClient.disconnect();
+        }
     
     },[])
 
@@ -60,7 +60,7 @@ const Cube = () => {
             {/* <pointLight position={[5, 5, 5]} /> */}
             <ambientLight intensity={0.5} />
             {/* <Mesh socket={socketClient}/> */}
-            <ParticleText />
+            <ParticleText socket={socketClient}/>
             <OrbitControls />
         </Canvas>
     )

@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from "@react-three/fiber";
 
@@ -21,7 +21,7 @@ const vertexShader = `
         vec4 projectedPosition = projectionMatrix * viewPosition;
 
         gl_Position = projectedPosition;
-        gl_PointSize = 30.0;
+        gl_PointSize = 15.0;
     }
 `;
 
@@ -40,14 +40,17 @@ const fragmentShader = `
 
 `
 
-const ParticleText = () => {
+const ParticleText = ({socket}) => {
 
     const pointRef = useRef();
+    const [speed, setSpeed] = useState(0);
+    const [fontLoaded, setFontLoaded]  = useState(false);
 
     let textCtx;
 
-    const fontName = "Verdana";
-    const textureFontSize = 25;
+    const SFMono = new FontFace('SF-Mono', 'url(./fonts/SF-Mono-Regular.otf)')
+    const fontName = "SF-Mono";
+    const textureFontSize = 60;
     const fontScaleFactor = 0.18;
 
     let string = 'fuck me';
@@ -55,9 +58,9 @@ const ParticleText = () => {
     let particles = [];
 
     let stringBox = {
-        wTexture: 100,
-        wScene: 18,
-        hTexture: 28,
+        wTexture: 120,
+        wScene: 25,
+        hTexture: 50,
         hScene: 5.04
     };
 
@@ -65,7 +68,7 @@ const ParticleText = () => {
     textCanvas.width = textCanvas.height = 0;
     textCtx = textCanvas.getContext("2d");
 
-    const particlesPosition = useMemo(() => {
+    const samplingPoints = () => {
         const lines = string.split(`\n`);
         const linesNumber = lines.length;
         textCanvas.width = stringBox.wTexture;
@@ -139,22 +142,30 @@ const ParticleText = () => {
         } else {
             textureCoordinates = [];
         }
+    }
 
-        //to flip and center text
-        // Gather with and height of the bounding box
-        const maxX = textureCoordinates.map(v => v.x).sort((a, b) => (b - a))[0];
-        const maxY = textureCoordinates.map(v => v.y).sort((a, b) => (b - a))[0];
-        stringBox.wScene = maxX;
-        stringBox.hScene = maxY;
-        
-        const vertices = new Float32Array(textureCoordinates.length * 3);
+    SFMono.load().then(() => {
+        document.fonts.add(SFMono);
+        setFontLoaded(true);
+    })
 
-        for (let i = 0; i < textureCoordinates.length; i++) {
-            vertices.set([textureCoordinates[i].x, stringBox.hScene - textureCoordinates[i].y,  15 * Math.random()], i * 3);
-        }
-
-        return vertices;
-        
+    const particlesPosition = useMemo(() => {
+            samplingPoints();
+            //to flip and center text
+            // Gather with and height of the bounding box
+            const maxX = textureCoordinates.map(v => v.x).sort((a, b) => (b - a))[0];
+            const maxY = textureCoordinates.map(v => v.y).sort((a, b) => (b - a))[0];
+            stringBox.wScene = maxX;
+            stringBox.hScene = maxY;
+            
+            const vertices = new Float32Array(textureCoordinates.length * 3);
+    
+            for (let i = 0; i < textureCoordinates.length; i++) {
+                vertices.set([textureCoordinates[i].x, stringBox.hScene - textureCoordinates[i].y,  15 * Math.random()], i * 3);
+            }
+    
+            return vertices;
+    
     },[])
 
     const uniforms = useMemo(() => ({
@@ -166,12 +177,32 @@ const ParticleText = () => {
     useFrame((state) => {
         const { clock } = state;
 
-        pointRef.current.material.uniforms.uTime.value = clock.elapsedTime * 0;
+        if (speed !== 0) {
+            pointRef.current.material.uniforms.uTime.value += speed;
+        } else {
+            //TODO: add a lerp here so it goes to zero not so abrupt
+            pointRef.current.material.uniforms.uTime.value = 0;
+        }
+        
     });
 
+    useEffect(() => {
+
+        const onSerialData = (value) => {
+            // console.log(value)
+            let stringValue = value.data.split(", ");
+            let sumSpeed = stringValue.reduce((partialSum, a) => Number(partialSum) + Number(a), 0);
+            setSpeed(sumSpeed * 0.001);
+        }
+
+        socket.on('serialdata', onSerialData);
+    },[socket])
+
+    console.log(speed)
+
     return (
-        <group position={[-0.5 * stringBox.wScene, -0.125 * stringBox.wScene, 0]}>
-            <points ref={pointRef}>
+        <group>
+            <points ref={pointRef} position={[-0.5 * 99, -0.125 * 99, 0]}>
                 <bufferGeometry>
                     <bufferAttribute 
                         attach={"attributes-position"}
