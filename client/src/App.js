@@ -1,11 +1,8 @@
-import socketIO from 'socket.io-client';
-import { Fragment, useEffect, useState, useRef } from 'react';
-import host from './constants';
+import { Fragment, useState } from 'react';
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
-import Text from './components/Text';
 import PageWrapper from './components/PageWrapper/PageWrapper';
 import Cube from './components/Cube';
 
@@ -20,12 +17,11 @@ function App() {
       setFontLoaded(true);
   })
 
-  const SamplePage = ({children, index}) => {
+  const SamplePage = ({index}) => {
 
     return (
       <PageWrapper>
-        {/* <Text stream={stream} index={index}>{children}</Text> */}
-        { fontLoaded && <Cube />}
+        { fontLoaded && <Cube index={index}/>}
       </PageWrapper>
     )
   } 

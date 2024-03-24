@@ -40,9 +40,10 @@ const fragmentShader = `
 
 `
 
-const ParticleText = ({socket, content}) => {
+const ParticleText = ({socket, content, mainIndex}) => {
 
     const pointRef = useRef();
+    const attribute = useRef();
     const [speed, setSpeed] = useState(0);
     const [stringBox, setStringBox] = useState({
         wTexture: window.innerWidth,
@@ -52,20 +53,22 @@ const ParticleText = ({socket, content}) => {
     });
 
     const [offsetWidth, setOffsetWidth] = useState(1);
+    const [updateMainIndex, setUpdateMainIndex] = useState(false);
+    const [ textureCoordinates, setTextureCoordinates] = useState([]);
 
     let textCtx;
 
     const fontName = "SF-Mono";
     const textureFontSize = 50;
 
-    let textureCoordinates = [];
-    let particles = [];
+    // let textureCoordinates = [];
 
     let textCanvas = document.createElement("canvas");
     textCanvas.width = textCanvas.height = 0;
     textCtx = textCanvas.getContext("2d");
 
-    const samplingPoints = () => {
+    const samplingPoints = (content) => {
+
         const lines = content.split(`\n`);
         const linesNumber = lines.length;
         textCanvas.width = stringBox.wTexture;
@@ -102,26 +105,6 @@ const ParticleText = ({socket, content}) => {
             }
             }
 
-            if (textureCoordinates.length !== 0) {
-                textureCoordinates = textureCoordinates.filter((c) => !c.toDelete);
-                particles = particles.filter((c) => !c.toDelete);
-
-                textureCoordinates.forEach((c) => {
-                    if (imageMask[c.y]) {
-                    if (imageMask[c.y][c.x]) {
-                        c.old = true;
-                        if (!c.toDelete) {
-                        imageMask[c.y][c.x] = false;
-                        }
-                    } else {
-                        c.toDelete = true;
-                    }
-                    } else {
-                    c.toDelete = true;
-                    }
-                });
-            }
-
             // Add new coordinates
             for (let i = 0; i < textCanvas.height; i++) {
             for (let j = 0; j < textCanvas.width; j++) {
@@ -139,46 +122,79 @@ const ParticleText = ({socket, content}) => {
     }
 
     const particlesPosition = useMemo(() => {
-            samplingPoints();
-            //to flip and center text
-            // Gather with and height of the bounding box
-            const maxX = textureCoordinates.map(v => v.x).sort((a, b) => (b - a))[0];
-            const maxY = textureCoordinates.map(v => v.y).sort((a, b) => (b - a))[0];
+            samplingPoints(content);
 
-            // setStringBox(prevState => ({...prevState, wScene: maxX, hScene: maxY}));
-            stringBox.wScene = maxX;
-            stringBox.hScene = maxY;
+            if (textureCoordinates.length > 0) {
+                 //to flip and center text
+                // Gather with and height of the bounding box
+                const maxX = textureCoordinates.map(v => v.x).sort((a, b) => (b - a))[0];
+                const maxY = textureCoordinates.map(v => v.y).sort((a, b) => (b - a))[0];
 
-            setOffsetWidth(maxX);
-            
-            const vertices = new Float32Array(textureCoordinates.length * 3);
-    
-            for (let i = 0; i < textureCoordinates.length; i++) {
-                vertices.set([textureCoordinates[i].x, stringBox.hScene - textureCoordinates[i].y,  15 * Math.random()], i * 3);
+                stringBox.wScene = maxX;
+                stringBox.hScene = maxY;
+
+                setOffsetWidth(maxX);
+                
+                const vertices = new Float32Array(textureCoordinates.length * 3);
+        
+                for (let i = 0; i < textureCoordinates.length; i++) {
+                    vertices.set([textureCoordinates[i].x, stringBox.hScene - textureCoordinates[i].y,  15 * Math.random()], i * 3);
+                }
+
+                return vertices;
+        
             }
-    
-            return vertices;
-    
-    },[stringBox])
+    },[])
 
     const uniforms = useMemo(() => ({
         uTime: {
           value: 0.0
         },
     }), [])
+
+    useEffect(() => {
+
+        if (pointRef.current.geometry) {
+            setTextureCoordinates([]);
+            pointRef.current.geometry.dispose();
+        }
+
+        samplingPoints(content);
+
+            if (textureCoordinates.length > 0) {
+                const maxX = textureCoordinates.map(v => v.x).sort((a, b) => (b - a))[0];
+                const maxY = textureCoordinates.map(v => v.y).sort((a, b) => (b - a))[0];
+
+                stringBox.wScene = maxX;
+                stringBox.hScene = maxY;
+
+                setOffsetWidth(maxX);
+                
+                const vertices = new Float32Array(textureCoordinates.length * 3);
+        
+                for (let i = 0; i < textureCoordinates.length; i++) {
+                    vertices.set([textureCoordinates[i].x, stringBox.hScene - textureCoordinates[i].y,  15 * Math.random()], i * 3);
+                }
+
+                const newAttribute = new THREE.BufferAttribute(vertices, 3);
+                pointRef.current.geometry.setAttribute('position', newAttribute);
+            }
+
+    }, [content])
     
     useFrame((state, delta) => {
 
         if (speed !== 0) {
             pointRef.current.material.uniforms.uTime.value += speed;
         } else {
-            //TODO: add a lerp here so it goes to zero not so abrupt
             if (pointRef.current.material.uniforms.uTime.value > 0) {
                 pointRef.current.material.uniforms.uTime.value -= (500 * delta);
             } else {
                 pointRef.current.material.uniforms.uTime.value = 0;
             }
         }
+
+        // attribute.current.needsUpdate = true;
         
     });
 
@@ -194,16 +210,17 @@ const ParticleText = ({socket, content}) => {
         socket.on('serialdata', onSerialData);
     },[socket])
 
-    // console.log(speed)
     return (
         <group>
             <points ref={pointRef} position={[-0.5 * offsetWidth, -0.5 * 30, 0]}>
                 <bufferGeometry>
                     <bufferAttribute 
+                        ref={attribute}
                         attach={"attributes-position"}
-                        count={particlesPosition.length/3}
+                        count={particlesPosition.length / 3}
                         array={particlesPosition}
                         itemSize={3}
+                        needsUpdate={true}
                     />
                 </bufferGeometry>
                 <shaderMaterial 

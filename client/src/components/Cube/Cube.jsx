@@ -1,16 +1,21 @@
-import { useRef, useEffect, useState, useCallback } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef, useEffect, useState } from "react";
+import { Canvas } from "@react-three/fiber";
 import socketIO from 'socket.io-client';
 import host from '../../constants';
 import ParticleText from '../ParticleText';
 import { OrbitControls } from "@react-three/drei";
+import { data } from './data';
 
-const Cube = () => {
+const Cube = ({ index }) => {
 
     const env = 'test';
     let url = env == 'dev' ? host.local : host.ip; 
 
     const [socketClient, setSocketClient] = useState(null);
+    const [mainIndex, setMainIndex] = useState(0);
+    const [cleanContent, setCleanContent] = useState([]);
+
+    const max = data.length;
 
     useEffect(() => {
     
@@ -22,45 +27,37 @@ const Cube = () => {
     
     },[])
 
-    const Mesh = ({ socket }) => {
-        const meshRef = useRef();
-        const [speed, setSpeed] = useState(0);
+    useEffect(() => {
 
-        useEffect(() => {
+        setCleanContent([]);
 
-            const onSerialData = (value) => {
-                // console.log(value)
-                let stringValue = value.data.split(", ");
-                let sumSpeed = stringValue.reduce((partialSum, a) => Number(partialSum) + Number(a), 0);
-                setSpeed(sumSpeed * 0.0001);
-            }
+        let _array = [];
+        const content = data[mainIndex].split(" ");
+        for (var i = 0; i < content.length; i++) {
+            _array.push(content[i].replaceAll("/", " "));
+        }
 
-            // socket.on('serialdata', onSerialData);
-        },[socket])
+        setCleanContent(_array);
+    },[mainIndex])
 
-        console.log(speed)
-
-        useFrame(() => {
-            meshRef.current.rotation.y += speed;
-        })
-
-        return (
-            <mesh ref={meshRef}>
-                <ambientLight intensity={0.1} />
-                <directionalLight color="red" position={[0, 0, 5]} />
-                <boxGeometry args={[2, 2, 2]}/>
-                <meshStandardMaterial />
-            </mesh>
-        )
+    const handleUpdatePhrase = () => {
+        if (mainIndex < max - 1) {
+            setMainIndex(mainIndex => mainIndex + 1);
+        } else {
+            setMainIndex(0);
+        }
     }
 
+    // console.log(cleanContent[0])
+
     return (
-        <Canvas camera={{ position: [0, 0, 160], fov: 45, near: 0.1, far: 1000, aspect: window.innerWidth/window.innerHeight  }}>
-            <ambientLight intensity={0.5} />
-            {/* <Mesh socket={socketClient}/> */}
-            <ParticleText socket={socketClient} content={'what'}/>
-            <OrbitControls />
-        </Canvas>
+        <>
+            <button onClick={handleUpdatePhrase}>test</button>
+            <Canvas camera={{ position: [0, 0, 160], fov: 45, near: 0.1, far: 1000, aspect: window.innerWidth/window.innerHeight  }}>
+                <ParticleText socket={socketClient} content={cleanContent[index]} mainIndex={mainIndex}/>
+                <OrbitControls />
+            </Canvas>
+        </>
     )
 }
 
