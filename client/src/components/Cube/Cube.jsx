@@ -5,7 +5,6 @@ import host from '../../constants';
 import ParticleText from '../ParticleText';
 import { OrbitControls } from "@react-three/drei";
 
-
 const Cube = () => {
 
     const env = 'test';
@@ -56,11 +55,10 @@ const Cube = () => {
     }
 
     return (
-        <Canvas camera={{ position: [0, 0, 100], fov: 45, near: 0.1, far: 1000, aspect: window.innerWidth/window.innerHeight  }}>
-            {/* <pointLight position={[5, 5, 5]} /> */}
+        <Canvas camera={{ position: [0, 0, 160], fov: 45, near: 0.1, far: 1000, aspect: window.innerWidth/window.innerHeight  }}>
             <ambientLight intensity={0.5} />
             {/* <Mesh socket={socketClient}/> */}
-            <ParticleText socket={socketClient}/>
+            <ParticleText socket={socketClient} content={'what'}/>
             <OrbitControls />
         </Canvas>
     )

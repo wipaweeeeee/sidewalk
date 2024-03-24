@@ -11,28 +11,21 @@ import Cube from './components/Cube';
 
 function App() {
 
-  const [stream, setStream] = useState(0);
-  const socketRef = useRef();
+    const [fontLoaded, setFontLoaded]  = useState(false);
 
-  // useEffect(() => {
+    const SFMono = new FontFace('SF-Mono', 'url(./fonts/SF-Mono-Regular.otf)');
 
-  //   const env = 'test';
-
-  //   let url = env == 'dev' ? host.local : host.ip; 
-  //   socketRef.current = socketIO.connect(`${url}:4000`);
-
-  //   socketRef.current.on('serialdata', (data) => {
-  //     setStream((data.data).split(", "))
-  //   })
-
-  // },[])
+    SFMono.load().then(() => {
+      document.fonts.add(SFMono);
+      setFontLoaded(true);
+  })
 
   const SamplePage = ({children, index}) => {
 
     return (
       <PageWrapper>
         {/* <Text stream={stream} index={index}>{children}</Text> */}
-        <Cube />
+        { fontLoaded && <Cube />}
       </PageWrapper>
     )
   } 
@@ -44,23 +37,23 @@ function App() {
     },
     {
       path: "/page2",
-      element: <SamplePage index={1} stream={stream} />,
+      element: <SamplePage index={1} />,
     },
     {
       path: "/page3",
-      element: <SamplePage index={2} stream={stream} />,
+      element: <SamplePage index={2} />,
     },
     {
       path: "/page4",
-      element: <SamplePage index={3} stream={stream} />,
+      element: <SamplePage index={3} />,
     },
     {
       path: "/page5",
-      element: <SamplePage index={4} stream={stream} />,
+      element: <SamplePage index={4} />,
     },
     {
       path: "/page6",
-      element: <SamplePage index={5} stream={stream} />,
+      element: <SamplePage index={5} />,
     },
   ]);
 

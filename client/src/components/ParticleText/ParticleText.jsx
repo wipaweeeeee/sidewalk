@@ -40,40 +40,37 @@ const fragmentShader = `
 
 `
 
-const ParticleText = ({socket}) => {
+const ParticleText = ({socket, content}) => {
 
     const pointRef = useRef();
     const [speed, setSpeed] = useState(0);
-    const [fontLoaded, setFontLoaded]  = useState(false);
+    const [stringBox, setStringBox] = useState({
+        wTexture: window.innerWidth,
+        wScene: 0,
+        hTexture: window.innerHeight,
+        hScene: 0
+    });
+
+    const [offsetWidth, setOffsetWidth] = useState(1);
 
     let textCtx;
 
-    const SFMono = new FontFace('SF-Mono', 'url(./fonts/SF-Mono-Regular.otf)')
     const fontName = "SF-Mono";
-    const textureFontSize = 60;
-    const fontScaleFactor = 0.18;
+    const textureFontSize = 50;
 
-    let string = 'fuck me';
     let textureCoordinates = [];
     let particles = [];
-
-    let stringBox = {
-        wTexture: 120,
-        wScene: 25,
-        hTexture: 50,
-        hScene: 5.04
-    };
 
     let textCanvas = document.createElement("canvas");
     textCanvas.width = textCanvas.height = 0;
     textCtx = textCanvas.getContext("2d");
 
     const samplingPoints = () => {
-        const lines = string.split(`\n`);
+        const lines = content.split(`\n`);
         const linesNumber = lines.length;
         textCanvas.width = stringBox.wTexture;
         textCanvas.height = stringBox.hTexture;
-        textCtx.font = "100 " + textureFontSize + "px " + fontName;
+        textCtx.font = textureFontSize + "px " + fontName;
         textCtx.fillStyle = "#2a9d8f";
         textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
         for (let i = 0; i < linesNumber; i++) {
@@ -106,26 +103,23 @@ const ParticleText = ({socket}) => {
             }
 
             if (textureCoordinates.length !== 0) {
-            // Clean up: delete coordinates and particles which disappeared on the prev step
-            // We need to keep same indexes for coordinates and particles to reuse old particles properly
-            textureCoordinates = textureCoordinates.filter((c) => !c.toDelete);
-            particles = particles.filter((c) => !c.toDelete);
+                textureCoordinates = textureCoordinates.filter((c) => !c.toDelete);
+                particles = particles.filter((c) => !c.toDelete);
 
-            // Go through existing coordinates (old to keep, toDelete for fade-out animation)
-            textureCoordinates.forEach((c) => {
-                if (imageMask[c.y]) {
-                if (imageMask[c.y][c.x]) {
-                    c.old = true;
-                    if (!c.toDelete) {
-                    imageMask[c.y][c.x] = false;
+                textureCoordinates.forEach((c) => {
+                    if (imageMask[c.y]) {
+                    if (imageMask[c.y][c.x]) {
+                        c.old = true;
+                        if (!c.toDelete) {
+                        imageMask[c.y][c.x] = false;
+                        }
+                    } else {
+                        c.toDelete = true;
                     }
-                } else {
+                    } else {
                     c.toDelete = true;
-                }
-                } else {
-                c.toDelete = true;
-                }
-            });
+                    }
+                });
             }
 
             // Add new coordinates
@@ -144,19 +138,18 @@ const ParticleText = ({socket}) => {
         }
     }
 
-    SFMono.load().then(() => {
-        document.fonts.add(SFMono);
-        setFontLoaded(true);
-    })
-
     const particlesPosition = useMemo(() => {
             samplingPoints();
             //to flip and center text
             // Gather with and height of the bounding box
             const maxX = textureCoordinates.map(v => v.x).sort((a, b) => (b - a))[0];
             const maxY = textureCoordinates.map(v => v.y).sort((a, b) => (b - a))[0];
+
+            // setStringBox(prevState => ({...prevState, wScene: maxX, hScene: maxY}));
             stringBox.wScene = maxX;
             stringBox.hScene = maxY;
+
+            setOffsetWidth(maxX);
             
             const vertices = new Float32Array(textureCoordinates.length * 3);
     
@@ -166,7 +159,7 @@ const ParticleText = ({socket}) => {
     
             return vertices;
     
-    },[])
+    },[stringBox])
 
     const uniforms = useMemo(() => ({
         uTime: {
@@ -174,14 +167,17 @@ const ParticleText = ({socket}) => {
         },
     }), [])
     
-    useFrame((state) => {
-        const { clock } = state;
+    useFrame((state, delta) => {
 
         if (speed !== 0) {
             pointRef.current.material.uniforms.uTime.value += speed;
         } else {
             //TODO: add a lerp here so it goes to zero not so abrupt
-            pointRef.current.material.uniforms.uTime.value = 0;
+            if (pointRef.current.material.uniforms.uTime.value > 0) {
+                pointRef.current.material.uniforms.uTime.value -= (500 * delta);
+            } else {
+                pointRef.current.material.uniforms.uTime.value = 0;
+            }
         }
         
     });
@@ -198,11 +194,10 @@ const ParticleText = ({socket}) => {
         socket.on('serialdata', onSerialData);
     },[socket])
 
-    console.log(speed)
-
+    // console.log(speed)
     return (
         <group>
-            <points ref={pointRef} position={[-0.5 * 99, -0.125 * 99, 0]}>
+            <points ref={pointRef} position={[-0.5 * offsetWidth, -0.5 * 30, 0]}>
                 <bufferGeometry>
                     <bufferAttribute 
                         attach={"attributes-position"}
