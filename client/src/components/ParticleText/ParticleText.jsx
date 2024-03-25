@@ -40,10 +40,9 @@ const fragmentShader = `
 
 `
 
-const ParticleText = ({socket, content, mainIndex}) => {
+const ParticleText = ({socket, content, handleUpdateMainIndex}) => {
 
     const pointRef = useRef();
-    const attribute = useRef();
     const [speed, setSpeed] = useState(0);
     const [stringBox, setStringBox] = useState({
         wTexture: window.innerWidth,
@@ -53,7 +52,6 @@ const ParticleText = ({socket, content, mainIndex}) => {
     });
 
     const [offsetWidth, setOffsetWidth] = useState(1);
-    const [updateMainIndex, setUpdateMainIndex] = useState(false);
     const [ textureCoordinates, setTextureCoordinates] = useState([]);
 
     let textCtx;
@@ -193,8 +191,6 @@ const ParticleText = ({socket, content, mainIndex}) => {
                 pointRef.current.material.uniforms.uTime.value = 0;
             }
         }
-
-        // attribute.current.needsUpdate = true;
         
     });
 
@@ -210,12 +206,27 @@ const ParticleText = ({socket, content, mainIndex}) => {
         socket.on('serialdata', onSerialData);
     },[socket])
 
+    function usePrevious(value) {
+        const ref = useRef();
+        useEffect(() => {
+          ref.current = value; //assign the value of ref to the argument
+        },[value]); //this code will run when the value of 'value' changes
+        return ref.current; //in the end, return the current ref value.
+    }
+
+    const prevSpeed = usePrevious(speed);
+
+    useEffect(() => {
+        if (prevSpeed > 0 && speed == 0) {
+            handleUpdateMainIndex();
+        }
+    }, [prevSpeed]) 
+
     return (
         <group>
             <points ref={pointRef} position={[-0.5 * offsetWidth, -0.5 * 30, 0]}>
                 <bufferGeometry>
                     <bufferAttribute 
-                        ref={attribute}
                         attach={"attributes-position"}
                         count={particlesPosition.length / 3}
                         array={particlesPosition}
