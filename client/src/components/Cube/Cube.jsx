@@ -52,7 +52,6 @@ const Cube = ({ index }) => {
 
     return (
         <>
-            <button onClick={handleUpdateMainIndex}>test</button>
             <Canvas camera={{ position: [0, 0, 160], fov: 45, near: 0.1, far: 1000, aspect: window.innerWidth/window.innerHeight  }}>
                 <ParticleText 
                     socket={socketClient} 
